@@ -5,17 +5,21 @@ import sys
 import argparse
 
 def is_script_running(script_path):
+    current_pid = os.getpid()
     if platform.system() == "Windows":
         escaped_script_path = script_path.replace("\\", "\\\\")
         cmd = (
             'Get-WmiObject Win32_Process | '
-            f'Where-Object {{ $_.CommandLine -match "{escaped_script_path}" }} | '
-            'Where-Object { $_.CommandLine -ne $null }'
+            'Where-Object { $_.CommandLine -ne $null } | '
+            f'Where-Object {{ $_.CommandLine -match "{escaped_script_path}" }}'
         )
         result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
-        processes = [line for line in result.stdout.splitlines() if script_path in line]
+        processes = [
+            line for line in result.stdout.splitlines()
+            if script_path in line and str(current_pid) not in line
+        ]
     else:
-        cmd = f'ps -ef | grep "[/]{script_path}" | grep -v grep'
+        cmd = f'ps -ef | grep "[/]{script_path}" | grep -v grep | grep -v {current_pid}'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         processes = result.stdout.splitlines()
     
