@@ -6,10 +6,10 @@ import argparse
 
 def is_script_running(script_path):
     if platform.system() == "Windows":
-        cmd = f'Get-Process | Where-Object {{ $_.Path -like "*{script_path}*" }}'
+        cmd = f'Get-Process | Where-Object {{ $_.Path -eq "{script_path}" }}'
         result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
     else:
-        cmd = f'ps -ef | grep "[/]{script_path}"'
+        cmd = f'ps -ef | grep "[/]{script_path}" | grep -v grep'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     
     return script_path in result.stdout
