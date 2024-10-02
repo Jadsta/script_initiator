@@ -6,13 +6,16 @@ import argparse
 
 def is_script_running(script_path):
     if platform.system() == "Windows":
-        cmd = f'Get-WmiObject Win32_Process | Where-Object {{ $_.CommandLine -match "{script_path}" }}'
+        cmd = f'Get-WmiObject Win32_Process | Where-Object {{ $_.CommandLine -match "{script_path.replace("\\", "\\\\")}" }}'
         result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
+        # Filter out processes without command line arguments
+        processes = [line for line in result.stdout.splitlines() if script_path in line]
     else:
         cmd = f'ps -ef | grep "[/]{script_path}" | grep -v grep'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        processes = result.stdout.splitlines()
     
-    return script_path in result.stdout
+    return len(processes) > 0
 
 def start_script(script_path):
     if platform.system() == "Windows":
