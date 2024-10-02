@@ -9,9 +9,12 @@ def is_script_running(script_path):
     if platform.system() == "Windows":
         escaped_script_path = script_path.replace("\\", "\\\\")
         cmd = (
+            '$currentPID = $PID; '
             'Get-WmiObject Win32_Process | '
             'Where-Object { $_.CommandLine -ne $null } | '
-            f'Where-Object {{ $_.CommandLine -match "{escaped_script_path}" }}'
+            f'Where-Object {{ $_.CommandLine -match "python.*{escaped_script_path}" }} | '
+            'Where-Object { $_.ProcessId -ne $currentPID } | '
+            'Select-Object ProcessId, CommandLine'
         )
         result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
         processes = [
